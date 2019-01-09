@@ -17,14 +17,28 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
-}
-
--(void)viewWillAppear:(BOOL)animated {
-    self.arrayEvents = [[NSMutableArray alloc] init];
-    
     NSArray *array = [[UIApplication sharedApplication] scheduledLocalNotifications];
     self.arrayEvents = [[NSMutableArray alloc]initWithArray:array];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(reloadTableViewWhenNewEvent) name:@"NewEvent" object:nil];
+    //self.arrayEvents = [[NSMutableArray alloc] init];
+   
+    
 }
+
+-(void) dealloc {
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+    
+}
+
+-(void) reloadTableViewWhenNewEvent {
+    
+    [self.arrayEvents removeAllObjects];
+    NSArray *array = [[UIApplication sharedApplication] scheduledLocalNotifications];
+    self.arrayEvents = [[NSMutableArray alloc]initWithArray:array];
+     [self.tableView reloadSections:[NSIndexSet indexSetWithIndex:0] withRowAnimation:UITableViewRowAnimationFade];
+    
+}
+
 
 #pragma mark - Table view data source
 
@@ -65,4 +79,24 @@
     [self.navigationController pushViewController:viewController animated:YES];
 }
 
+- (BOOL)tableView:(UITableView *)tableView canEditRowAtIndexPath:(NSIndexPath *)indexPath {
+    return YES;
+}
+
+- (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath {
+    if (editingStyle == UITableViewCellEditingStyleDelete) {
+        UILocalNotification * notification = [self.arrayEvents objectAtIndex: indexPath.row];
+        
+        [[UIApplication sharedApplication] cancelLocalNotification:notification];
+        
+        [self.arrayEvents removeObjectAtIndex:indexPath.row];
+
+        [tableView deleteRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationFade];
+    } else if (editingStyle == UITableViewCellEditingStyleInsert) {
+        
+    }
+}
+
 @end
+
+
